@@ -1,0 +1,617 @@
+<html><head><base href="/" /><title>Professional Excel-like Web Application</title><meta name="viewport" content="width=device-width, initial-scale=1" /><style>
+:root {
+  --primary: #1a73e8;
+  --border: #e0e0e0;
+  --cell-bg: #ffffff;
+  --header-bg: #f8f9fa;
+  --toolbar-bg: #f1f3f4;
+  --dark-primary: #2196f3;
+  --dark-border: #404040;
+  --dark-cell-bg: #1e1e1e;
+  --dark-header-bg: #2d2d2d;
+  --dark-toolbar-bg: #333333;
+  --dark-text: #ffffff;
+  --blue-primary: #1565c0;
+  --blue-border: #bbdefb;
+  --blue-cell-bg: #e3f2fd;
+  --blue-header-bg: #bbdefb;
+  --blue-toolbar-bg: #90caf9;
+  --blue-text: #002171;
+  --sepia-primary: #795548;
+  --sepia-border: #d7ccc8;
+  --sepia-cell-bg: #efebe9;
+  --sepia-header-bg: #d7ccc8;
+  --sepia-toolbar-bg: #bcaaa4;
+  --sepia-text: #3e2723;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.toolbar {
+  background: var(--toolbar-bg);
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 0 10px;
+  border-right: 1px solid var(--border);
+}
+
+.toolbar button {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolbar button:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.toolbar select, .toolbar input {
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.toolbar input[type="color"] {
+  width: 40px;
+  height: 30px;
+  padding: 2px;
+}
+
+.formula-bar {
+  padding: 10px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#formula-input {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.spreadsheet {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.grid {
+  display: inline-block;
+  background: white;
+  border-collapse: collapse;
+}
+
+.cell {
+  min-width: 100px;
+  height: 25px;
+  border: 1px solid var(--border);
+  padding: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--cell-bg);
+}
+
+.header-cell {
+  background: var(--header-bg);
+  font-weight: bold;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.row-header {
+  background: var(--header-bg);
+  font-weight: bold;
+  text-align: center;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.selected {
+  border: 2px solid var(--primary);
+  background: rgba(26, 115, 232, 0.1);
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    padding: 5px;
+  }
+  
+  .cell {
+    min-width: 80px;
+  }
+}
+</style></head><body>
+<div class="container">
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <select id="font-family">
+        <option value="Arial">Arial</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Helvetica">Helvetica</option>
+        <option value="Calibri">Calibri</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Palatino">Palatino</option>
+        <option value="Garamond">Garamond</option>
+        <option value="Bookman">Bookman</option>
+        <option value="Comic Sans MS">Comic Sans MS</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+        <option value="Arial Black">Arial Black</option>
+        <option value="Impact">Impact</option>
+        <option value="Lucida Sans">Lucida Sans</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Geneva">Geneva</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Monaco">Monaco</option>
+        <option value="Brush Script MT">Brush Script MT</option>
+        <option value="Lucida Console">Lucida Console</option>
+        <option value="Copperplate">Copperplate</option>
+        <option value="Papyrus">Papyrus</option>
+        <option value="Century Gothic">Century Gothic</option>
+        <option value="Optima">Optima</option>
+        <option value="Futura">Futura</option>
+        <option value="Franklin Gothic">Franklin Gothic</option>
+        <option value="Baskerville">Baskerville</option>
+        <option value="Rockwell">Rockwell</option>
+        <option value="Cambria">Cambria</option>
+        <option value="Consolas">Consolas</option>
+      </select>
+      <input type="number" id="font-size" min="6" max="72" value="12" style="width: 60px">
+    </div>
+
+    <div class="toolbar-group">
+      <button id="bold-btn"><b>B</b></button>
+      <button id="italic-btn"><i>I</i></button>
+      <button id="underline-btn"><u>U</u></button>
+    </div>
+    
+    <div class="toolbar-group">
+      <input type="color" id="font-color" value="#000000">
+      <input type="color" id="bg-color" value="#ffffff">
+    </div>
+    
+    <div class="toolbar-group">
+      <button id="align-left">⫷</button>
+      <button id="align-center">≣</button>
+      <button id="align-right">⫸</button>
+    </div>
+    
+    <div class="toolbar-group">
+      <button id="clear-btn">Clear</button>
+      <button id="export-btn">Export</button>
+      <button id="import-btn">Import</button>
+    </div>
+    
+    <div class="toolbar-group">
+      <button id="add-row-btn">Add Row</button>
+      <button id="add-col-btn">Add Column</button>
+    </div>
+
+    <div class="toolbar-group">
+      <select id="theme-select">
+        <option value="light">Light Theme</option>
+        <option value="dark">Dark Theme</option>
+        <option value="blue">Blue Theme</option>
+        <option value="sepia">Sepia Theme</option>
+      </select>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="merge-cells">Merge Cells</button>
+      <button id="split-cells">Split Cells</button>
+    </div>
+
+    <div class="toolbar-group">
+      <button id="undo-btn">↶ Undo</button>
+      <button id="redo-btn">↷ Redo</button>
+    </div>
+  </div>
+  
+  <div class="formula-bar">
+    <span>fx</span>
+    <input type="text" id="formula-input" placeholder="Enter formula or value">
+  </div>
+  
+  <div class="spreadsheet">
+    <table class="grid" id="grid"></table>
+  </div>
+</div>
+
+<script>
+class Spreadsheet {
+  constructor(rows = 50, cols = 26) {
+    this.rows = rows;
+    this.cols = cols;
+    this.data = {};
+    this.selectedCell = null;
+    this.undoStack = [];
+    this.redoStack = [];
+    this.init();
+    this.setupEventListeners();
+  }
+
+  init() {
+    const grid = document.getElementById('grid');
+    
+    const headerRow = document.createElement('tr');
+    headerRow.appendChild(this.createCell('', 'header-cell row-header'));
+    for (let i = 0; i < this.cols; i++) {
+      headerRow.appendChild(this.createCell(String.fromCharCode(65 + i), 'header-cell'));
+    }
+    grid.appendChild(headerRow);
+    
+    for (let i = 0; i < this.rows; i++) {
+      const row = document.createElement('tr');
+      row.appendChild(this.createCell(i + 1, 'header-cell row-header'));
+      for (let j = 0; j < this.cols; j++) {
+        const cell = this.createCell('', 'cell');
+        cell.dataset.row = i;
+        cell.dataset.col = j;
+        row.appendChild(cell);
+      }
+      grid.appendChild(row);
+    }
+  }
+
+  createCell(content, className) {
+    const cell = document.createElement('td');
+    cell.textContent = content;
+    cell.className = className;
+    return cell;
+  }
+
+  setupEventListeners() {
+    document.getElementById('grid').addEventListener('click', (e) => {
+      if (e.target.classList.contains('cell')) {
+        this.selectCell(e.target);
+      }
+    });
+
+    document.getElementById('formula-input').addEventListener('input', (e) => {
+      if (this.selectedCell) {
+        this.selectedCell.textContent = e.target.value;
+        this.data[`${this.selectedCell.dataset.row},${this.selectedCell.dataset.col}`] = e.target.value;
+        this.saveState();
+      }
+    });
+
+    document.getElementById('bold-btn').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.style.fontWeight = 
+          this.selectedCell.style.fontWeight === 'bold' ? 'normal' : 'bold';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('italic-btn').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.style.fontStyle = 
+          this.selectedCell.style.fontStyle === 'italic' ? 'normal' : 'italic';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('underline-btn').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.style.textDecoration = 
+          this.selectedCell.style.textDecoration === 'underline' ? 'none' : 'underline';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.textContent = '';
+        this.selectedCell.style = '';
+        delete this.data[`${this.selectedCell.dataset.row},${this.selectedCell.dataset.col}`];
+        document.getElementById('formula-input').value = '';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('export-btn').addEventListener('click', () => {
+      const csvContent = this.exportToCSV();
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'spreadsheet.csv';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('add-row-btn').addEventListener('click', () => {
+      this.addRow();
+    });
+
+    document.getElementById('add-col-btn').addEventListener('click', () => {
+      this.addColumn();
+    });
+
+    document.getElementById('font-family').addEventListener('change', (e) => {
+      if (this.selectedCell) {
+        this.selectedCell.style.fontFamily = e.target.value;
+        this.saveState();
+      }
+    });
+
+    document.getElementById('font-size').addEventListener('input', (e) => {
+      if (this.selectedCell) {
+        this.selectedCell.style.fontSize = e.target.value + 'px';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('font-color').addEventListener('input', (e) => {
+      if (this.selectedCell) {
+        this.selectedCell.style.color = e.target.value;
+        this.saveState();
+      }
+    });
+
+    document.getElementById('bg-color').addEventListener('input', (e) => {
+      if (this.selectedCell) {
+        this.selectedCell.style.backgroundColor = e.target.value;
+        this.saveState();
+      }
+    });
+
+    document.getElementById('align-left').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.style.textAlign = 'left';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('align-center').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.style.textAlign = 'center';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('align-right').addEventListener('click', () => {
+      if (this.selectedCell) {
+        this.selectedCell.style.textAlign = 'right';
+        this.saveState();
+      }
+    });
+
+    document.getElementById('theme-select').addEventListener('change', (e) => {
+      this.themeChange(e.target.value);
+    });
+
+    document.getElementById('undo-btn').addEventListener('click', () => {
+      this.undo();
+    });
+
+    document.getElementById('redo-btn').addEventListener('click', () => {
+      this.redo();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key.toLowerCase()) {
+          case 'b':
+            e.preventDefault();
+            document.getElementById('bold-btn').click();
+            break;
+          case 'i':
+            e.preventDefault();
+            document.getElementById('italic-btn').click();
+            break;
+          case 'u':
+            e.preventDefault();
+            document.getElementById('underline-btn').click();
+            break;
+        }
+      }
+    });
+  }
+
+  selectCell(cell) {
+    if (this.selectedCell) {
+      this.selectedCell.classList.remove('selected');
+    }
+    this.selectedCell = cell;
+    cell.classList.add('selected');
+    document.getElementById('formula-input').value = cell.textContent;
+    
+    document.getElementById('font-family').value = cell.style.fontFamily || 'Arial';
+    document.getElementById('font-size').value = parseInt(cell.style.fontSize) || '12';
+    document.getElementById('font-color').value = cell.style.color || '#000000';
+    document.getElementById('bg-color').value = cell.style.backgroundColor || '#ffffff';
+  }
+
+  addRow() {
+    const grid = document.getElementById('grid');
+    const row = document.createElement('tr');
+    row.appendChild(this.createCell(this.rows + 1, 'header-cell row-header'));
+    
+    for (let j = 0; j < this.cols; j++) {
+      const cell = this.createCell('', 'cell');
+      cell.dataset.row = this.rows;
+      cell.dataset.col = j;
+      row.appendChild(cell);
+    }
+    
+    grid.appendChild(row);
+    this.rows++;
+  }
+
+  addColumn() {
+    const grid = document.getElementById('grid');
+    const headerCell = this.createCell(String.fromCharCode(65 + this.cols), 'header-cell');
+    grid.rows[0].appendChild(headerCell);
+    
+    for (let i = 1; i < grid.rows.length; i++) {
+      const cell = this.createCell('', 'cell');
+      cell.dataset.row = i - 1;
+      cell.dataset.col = this.cols;
+      grid.rows[i].appendChild(cell);
+    }
+    
+    this.cols++;
+  }
+
+  exportToCSV() {
+    let csv = '';
+    const grid = document.getElementById('grid');
+    
+    for (let i = 1; i < grid.rows.length; i++) {
+      const cells = grid.rows[i].cells;
+      const row = [];
+      
+      for (let j = 1; j < cells.length; j++) {
+        const cellContent = cells[j].textContent.replace(/,/g, ';');
+        row.push(cellContent);
+      }
+      
+      csv += row.join(',') + '\n';
+    }
+    
+    return csv;
+  }
+
+  themeChange(theme) {
+    const root = document.documentElement;
+    switch(theme) {
+      case 'dark':
+        root.style.setProperty('--primary', 'var(--dark-primary)');
+        root.style.setProperty('--border', 'var(--dark-border)');
+        root.style.setProperty('--cell-bg', 'var(--dark-cell-bg)');
+        root.style.setProperty('--header-bg', 'var(--dark-header-bg)');
+        root.style.setProperty('--toolbar-bg', 'var(--dark-toolbar-bg)');
+        document.body.style.color = 'var(--dark-text)';
+        break;
+      case 'blue':
+        root.style.setProperty('--primary', 'var(--blue-primary)');
+        root.style.setProperty('--border', 'var(--blue-border)');
+        root.style.setProperty('--cell-bg', 'var(--blue-cell-bg)');
+        root.style.setProperty('--header-bg', 'var(--blue-header-bg)');
+        root.style.setProperty('--toolbar-bg', 'var(--blue-toolbar-bg)');
+        document.body.style.color = 'var(--blue-text)';
+        break;
+      case 'sepia':
+        root.style.setProperty('--primary', 'var(--sepia-primary)');
+        root.style.setProperty('--border', 'var(--sepia-border)');
+        root.style.setProperty('--cell-bg', 'var(--sepia-cell-bg)');
+        root.style.setProperty('--header-bg', 'var(--sepia-header-bg)');
+        root.style.setProperty('--toolbar-bg', 'var(--sepia-toolbar-bg)');
+        document.body.style.color = 'var(--sepia-text)';
+        break;
+      default:
+        root.style.setProperty('--primary', '#1a73e8');
+        root.style.setProperty('--border', '#e0e0e0');
+        root.style.setProperty('--cell-bg', '#ffffff');
+        root.style.setProperty('--header-bg', '#f8f9fa');
+        root.style.setProperty('--toolbar-bg', '#f1f3f4');
+        document.body.style.color = '';
+    }
+  }
+
+  saveState() {
+    const state = JSON.stringify({
+      data: this.data,
+      styles: this.getStyles()
+    });
+    this.undoStack.push(state);
+    this.redoStack = [];
+  }
+
+  undo() {
+    if (this.undoStack.length > 0) {
+      const currentState = {
+        data: this.data,
+        styles: this.getStyles()
+      };
+      this.redoStack.push(JSON.stringify(currentState));
+      
+      const previousState = JSON.parse(this.undoStack.pop());
+      this.restoreState(previousState);
+    }
+  }
+
+  redo() {
+    if (this.redoStack.length > 0) {
+      const currentState = {
+        data: this.data,
+        styles: this.getStyles()
+      };
+      this.undoStack.push(JSON.stringify(currentState));
+      
+      const nextState = JSON.parse(this.redoStack.pop());
+      this.restoreState(nextState);
+    }
+  }
+
+  getStyles() {
+    const styles = {};
+    document.querySelectorAll('.cell').forEach(cell => {
+      const key = `${cell.dataset.row},${cell.dataset.col}`;
+      styles[key] = cell.style.cssText;
+    });
+    return styles;
+  }
+
+  restoreState(state) {
+    this.data = state.data;
+    for (const [key, style] of Object.entries(state.styles)) {
+      const [row, col] = key.split(',');
+      const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+      if (cell) cell.style.cssText = style;
+    }
+  }
+
+  throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+      if (!inThrottle) {
+        func.apply(this, args);
+        inThrottle = true;
+        setTimeout(() => inThrottle = false, limit);
+      }
+    }
+  }
+}
+
+
+const spreadsheet = new Spreadsheet();
+</script></body></html>
