@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Fake Cards</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+            text-align: center;
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-align: left;
+            width: 100%;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #ff7e5f;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #feb47b;
+        }
+
+        #copyButton, #downloadButton {
+            display: none;
+            margin-top: 10px;
+        }
+
+        #results {
+            margin-top: 20px;
+            width: 100%;
+            text-align: center;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            background: rgba(255, 255, 255, 0.9);
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generate Fake Credit Cards</h1>
+    <form id="cardForm">
+        <label for="bin">BIN:</label>
+        <input type="text" id="bin" name="bin" required>
+        <label for="count">Count:</label>
+        <input type="number" id="count" name="count" required>
+        <button type="submit">Generate</button>
+    </form>
+    <button id="copyButton" onclick="copyToClipboard()">Copy Cards</button>
+    <button id="downloadButton" onclick="downloadTxtFile()">Download TXT</button>
+    <div id="results"></div>
+
+    <script>
+        function luhnAlgorithm(cardNumber) {
+            const digits = cardNumber.split('').map(Number);
+            const oddDigits = digits.filter((_, idx) => idx % 2 === digits.length % 2);
+            const evenDigits = digits.filter((_, idx) => idx % 2 !== digits.length % 2);
+            const checksum = [...oddDigits, ...evenDigits.map(d => d * 2)]
+                .flatMap(d => d > 9 ? [d - 9] : [d])
+                .reduce((sum, d) => sum + d, 0);
+            return checksum % 10 === 0;
+        }
+
+        function generateCard(bin) {
+            let cardNumber = bin;
+            while (cardNumber.length < 15) {
+                cardNumber += Math.floor(Math.random() * 10);
+            }
+            let checkDigit = (10 - luhnAlgorithm(cardNumber + '0')) % 10;
+            return cardNumber + checkDigit;
+        }
+
+        function generateExpiryDate() {
+            const date = new Date();
+            const month = ("0" + (date.getMonth() + 1)).slice(-2);
+            const year = date.getFullYear() + Math.floor(Math.random() * 4) + 1;
+            return `${month}/${year}`;
+        }
+
+        function generateCCV() {
+            return `${Math.floor(Math.random() * 900 + 100)}`;
+        }
+
+        function copyToClipboard() {
+            const resultsText = document.getElementById('results').innerText;
+            const textArea = document.createElement('textarea');
+            textArea.value = resultsText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Copied to clipboard');
+        }
+
+        function downloadTxtFile() {
+            const resultsText = document.getElementById('results').innerText;
+            const element = document.createElement('a');
+            const file = new Blob([resultsText], {type: 'text/plain'});
+            element.href = URL.createObjectURL(file);
+            element.download = 'credit_cards.txt';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        document.getElementById('cardForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const bin = document.getElementById('bin').value;
+            const count = document.getElementById('count').value;
+            const results = [];
+            for (let i = 0; i < count; i++) {
+                const cardNumber = generateCard(bin);
+                const expiryDate = generateExpiryDate();
+                const ccv = generateCCV();
+                results.push(`${cardNumber}|${expiryDate.replace('/', '|')}|${ccv}`);
+            }
+            document.getElementById('results').innerHTML = `<ul>${results.map(card => `<li>${card}</li>`).join('')}</ul>`;
+            document.getElementById('copyButton').style.display = 'block';
+            document.getElementById('downloadButton').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
+
+
+ 
