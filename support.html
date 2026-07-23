@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support — Receipt</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --paper:#FAF6EE;
+    --espresso:#2B1B12;
+    --charcoal:#3A322C;
+    --copper:#B5652D;
+    --moss:#6B7A5E;
+    --line:#D8CFBC;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--espresso);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(255,255,255,0.03), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(255,255,255,0.02), transparent 40%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px 16px;
+    font-family:'Courier New', Courier, monospace;
+    color:var(--charcoal);
+  }
+
+  .receipt-wrap{
+    width:100%;
+    max-width:380px;
+    filter:drop-shadow(0 24px 48px rgba(0,0,0,0.45));
+  }
+
+  .receipt{
+    background:var(--paper);
+    padding:36px 28px 8px;
+    position:relative;
+    animation:print 0.6s ease-out;
+  }
+
+  @keyframes print{
+    from{ transform:translateY(-24px); opacity:0; }
+    to{ transform:translateY(0); opacity:1; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .receipt{ animation:none; }
+  }
+
+  .torn{
+    height:14px;
+    background:
+      linear-gradient(135deg, var(--paper) 50%, transparent 50%) 0 0/14px 14px repeat-x,
+      linear-gradient(-135deg, var(--paper) 50%, transparent 50%) 0 0/14px 14px repeat-x;
+    background-position: 0 0, 7px 0;
+  }
+
+  .torn.top{ transform:rotate(180deg); margin-bottom:-1px; }
+
+  .brand{
+    text-align:center;
+    letter-spacing:0.18em;
+    font-size:11px;
+    color:var(--copper);
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+
+  h1{
+    text-align:center;
+    font-size:22px;
+    margin:6px 0 2px;
+    letter-spacing:0.02em;
+  }
+
+  .meta{
+    text-align:center;
+    font-size:11px;
+    color:#8a8074;
+    margin-bottom:18px;
+  }
+
+  .divider{
+    border:none;
+    border-top:1px dashed var(--line);
+    margin:18px 0;
+  }
+
+  .line{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    margin:6px 0;
+  }
+  .line .label{ color:#8a8074; }
+
+  .items{ margin:18px 0; }
+
+  .item{
+    margin-bottom:14px;
+  }
+
+  .item-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-size:13px;
+    margin-bottom:6px;
+  }
+
+  .item-head .ticker{
+    font-weight:bold;
+    letter-spacing:0.04em;
+  }
+
+  .item-head .qty{
+    color:var(--copper);
+    font-size:11px;
+  }
+
+  .addr-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    background:#F1EAD9;
+    border:1px dashed var(--line);
+    padding:8px 10px;
+    font-size:11px;
+    word-break:break-all;
+    line-height:1.4;
+  }
+
+  .addr-text{ flex:1; }
+
+  .copy-btn{
+    flex-shrink:0;
+    background:var(--espresso);
+    color:var(--paper);
+    border:none;
+    font-family:inherit;
+    font-size:10px;
+    letter-spacing:0.05em;
+    padding:6px 8px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  .copy-btn:hover{ background:var(--copper); }
+  .copy-btn.copied{ background:var(--moss); }
+
+  .copy-btn:focus-visible, .qr-toggle:focus-visible, .amount-btn:focus-visible{
+    outline:2px solid var(--copper);
+    outline-offset:2px;
+  }
+
+  .qr-toggle{
+    margin-top:6px;
+    background:none;
+    border:none;
+    color:var(--copper);
+    font-family:inherit;
+    font-size:10px;
+    letter-spacing:0.05em;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:2px 0;
+  }
+
+  .qr-box{
+    display:none;
+    justify-content:center;
+    margin-top:10px;
+    padding:10px;
+    background:#fff;
+  }
+  .qr-box.show{ display:flex; }
+
+  .total{
+    display:flex;
+    justify-content:space-between;
+    font-size:15px;
+    font-weight:bold;
+    margin:16px 0 4px;
+  }
+
+  .thanks{
+    text-align:center;
+    font-size:12px;
+    margin:22px 0 4px;
+    color:var(--charcoal);
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:10px;
+    color:#a49a8a;
+    margin-top:6px;
+    line-height:1.5;
+  }
+
+  .barcode{
+    height:36px;
+    margin:20px 0 10px;
+    background:repeating-linear-gradient(
+      90deg,
+      var(--espresso) 0px, var(--espresso) 2px,
+      transparent 2px, transparent 4px,
+      var(--espresso) 4px, var(--espresso) 5px,
+      transparent 5px, transparent 9px,
+      var(--espresso) 9px, var(--espresso) 12px,
+      transparent 12px, transparent 14px
+    );
+    opacity:0.85;
+  }
+</style>
+</head>
+<body>
+
+<div class="receipt-wrap">
+  <div class="torn top"></div>
+  <div class="receipt">
+
+    <div class="brand">☕ Thank You For Stopping By</div>
+    <h1>ISLEM HAMDI</h1>
+    <div class="meta" id="timestamp"></div>
+
+    <hr class="divider">
+
+    <div class="line"><span class="label">Order</span><span>Support / Tip</span></div>
+    <div class="line"><span class="label">Method</span><span>Crypto</span></div>
+
+    <hr class="divider">
+
+    <div class="items" id="items">
+      <!-- Wallet items -->
+      <div class="item" data-coin="BTC">
+        <div class="item-head"><span class="ticker">₿ BINANCE ID</span><span class="qty">1 addr</span></div>
+        <div class="addr-row">
+          <span class="addr-text" data-addr>17572577</span>
+          <button class="copy-btn" data-copy>Copy</button>
+        </div>
+        <button class="qr-toggle" data-qr-toggle>Show QR</button>
+        <div class="qr-box" data-qr-box></div>
+      </div>
+
+      <div class="item" data-coin="ETH">
+        <div class="item-head"><span class="ticker">$ USDT — BEP20</span><span class="qty">1 addr</span></div>
+        <div class="addr-row">
+          <span class="addr-text" data-addr>0x38c449b9e16d188c97e4fcdf88000bee9985fb4c</span>
+          <button class="copy-btn" data-copy>Copy</button>
+        </div>
+        <button class="qr-toggle" data-qr-toggle>Show QR</button>
+        <div class="qr-box" data-qr-box></div>
+      </div>
+    </div>
+
+    <div class="barcode"></div>
+
+    <div class="thanks">Every coffee helps keep the lights on. Thank you.</div>
+    <div class="footer-note">Verify any address before sending funds.<br>This page and its addresses belong to me alone.</div>
+  </div>
+  <div class="torn"></div>
+</div>
+
+<script>
+  // Live "printed" timestamp + a receipt-style order number
+  const ts = document.getElementById('timestamp');
+  const now = new Date();
+  const orderNo = Math.floor(1000 + Math.random() * 8999);
+  ts.textContent = `#${orderNo}  •  ${now.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'})}  ${now.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}`;
+
+  // Copy-to-clipboard
+  document.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const addr = btn.closest('.addr-row').querySelector('[data-addr]').textContent.trim();
+      try{
+        await navigator.clipboard.writeText(addr);
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        setTimeout(()=>{ btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+      }catch(e){
+        btn.textContent = 'Select & copy';
+      }
+    });
+  });
+
+  // QR toggle (generated client-side, nothing sent anywhere)
+  document.querySelectorAll('[data-qr-toggle]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const item = btn.closest('.item');
+      const box = item.querySelector('[data-qr-box]');
+      const addr = item.querySelector('[data-addr]').textContent.trim();
+      const isShown = box.classList.contains('show');
+
+      if(!isShown){
+        if(!box.dataset.rendered){
+          new QRCode(box, { text: addr, width:120, height:120, colorDark:'#2B1B12', colorLight:'#ffffff' });
+          box.dataset.rendered = '1';
+        }
+        box.classList.add('show');
+        btn.textContent = 'Hide QR';
+      } else {
+        box.classList.remove('show');
+        btn.textContent = 'Show QR';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
